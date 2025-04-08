@@ -7,23 +7,20 @@ import (
 	"github.com/google/uuid"
 )
 
-func UserToProtoUser(user models.User) (umv1.User, error) {
-	return umv1.User{
+func UserToProtoUser(user models.User) *umv1.User {
+	return &umv1.User{
 		Id:       user.Id.String(),
 		Login:    user.Login,
 		Password: user.Password,
-	}, nil
+	}
 }
 
-func ProtoUserToUser(user *umv1.User) (models.User, error) {
-	id, err := uuid.Parse(user.Id)
-	if err != nil {
-		return models.User{}, err
-	}
+func ProtoUserToUser(user *umv1.User) models.User {
+	id, _ := uuid.Parse(user.Id)
 
 	return models.User{
 		Id:       id,
 		Login:    user.Login,
 		Password: user.Password,
-	}, nil
+	}
 }

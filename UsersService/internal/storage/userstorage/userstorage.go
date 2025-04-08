@@ -45,13 +45,13 @@ func applyMigrations(db *sql.DB, migrationsPath string) error {
 	return goose.Up(db, migrationsPath)
 }
 
-// GetUserById implements storage.IUserStorage.
-func (p *PsqlStorage) GetUserById(context.Context, string) (models.User, error) {
+// GetUsers implements storage.IUserStorage.
+func (p *PsqlStorage) GetUsers(context.Context) ([]models.User, error) {
 	panic("unimplemented")
 }
 
-// GetUsers implements storage.IUserStorage.
-func (p *PsqlStorage) GetUsers(context.Context) ([]models.User, error) {
+// GetUserById implements storage.IUserStorage.
+func (p *PsqlStorage) GetUserById(context.Context, uuid.UUID) (models.User, error) {
 	panic("unimplemented")
 }
 

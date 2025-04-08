@@ -21,13 +21,13 @@ func New(log *slog.Logger, storage storage.IUserStorage) *UserService {
 	}
 }
 
-// GetUserById implements service.IUserService.
-func (u *UserService) GetUserById(context.Context, string) (models.User, error) {
+// GetUsers implements service.IUserService.
+func (u *UserService) GetUsers(context.Context) ([]models.User, error) {
 	panic("unimplemented")
 }
 
-// GetUsers implements service.IUserService.
-func (u *UserService) GetUsers(context.Context) ([]models.User, error) {
+// GetUserById implements service.IUserService.
+func (u *UserService) GetUserById(context.Context, uuid.UUID) (models.User, error) {
 	panic("unimplemented")
 }
 
