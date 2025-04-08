@@ -8,7 +8,7 @@ import (
 func main() {
 	config := config.MustLoad()
 
-	logger := logger.SetupLogger(config.Env)
+	log := logger.SetupLogger(config.Env)
 
-	
+	log.Info("Ready to change")
 }
