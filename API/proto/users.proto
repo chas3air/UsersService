@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package github.chas3air.todo_list.usersservice;
+import "google/protobuf/Empty.proto";
+
+option go_package = "chas3air.todo_list.usersManager.v1;umv1";
+
+
+service UsersService {
+    rpc GetUsers(google.protobuf.Empty) returns (GetUsersResponse);
+	rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse);
+	rpc InsertUser(InsertRequest) returns (InsertResponse);
+	rpc DeleteUser(DeleteResuest) returns (DeleteResponse);
+}
+
+message User {
+    string id = 1;
+    string login = 2;
+    string password = 3;
+}
+
+message GetUsersResponse {
+    repeated User users = 1;
+}
+
+message GetUserByIdRequest {
+    string id = 1;
+}
+
+message GetUserByIdResponse {
+    User user = 1;
+}
+
+message InsertRequest {
+    User user = 1;
+}
+
+message InsertResponse {
+    User user = 1;
+}
+
+message DeleteResuest {
+    string id = 1;
+}
+
+message DeleteResponse {
+    User user = 1;
+}

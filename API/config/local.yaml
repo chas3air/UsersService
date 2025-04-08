@@ -4,3 +4,6 @@ expiration_time: 10s
 api:
   port: 8080
   timeout: 10h
+
+userserver_port: user_server
+userserver_host: 50051
