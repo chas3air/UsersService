@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"users-service/internal/domain/interfaces/storage"
 	"users-service/internal/domain/models"
+	service_error "users-service/internal/service"
 	storage_error "users-service/internal/storage"
 	"users-service/pkg/logger/sl"
 
@@ -42,7 +43,7 @@ func (u *UserService) GetUsers(ctx context.Context) ([]models.User, error) {
 	if err != nil {
 		if errors.Is(err, storage_error.ErrNotFound) {
 			log.Warn("users not found", sl.Err(err))
-			return nil, fmt.Errorf("%s: %w", op, err)
+			return nil, fmt.Errorf("%s: %w", op, service_error.ErrNotFound)
 		}
 
 		log.Error("cannot fetch users", sl.Err(err))
@@ -54,7 +55,7 @@ func (u *UserService) GetUsers(ctx context.Context) ([]models.User, error) {
 
 // GetUserById implements service.IUserService.
 func (u *UserService) GetUserById(ctx context.Context, id uuid.UUID) (models.User, error) {
-	const op = "service.GetUsers"
+	const op = "service.GetUserById"
 	log := u.log.With(
 		op, "op",
 	)
@@ -69,7 +70,7 @@ func (u *UserService) GetUserById(ctx context.Context, id uuid.UUID) (models.Use
 	if err != nil {
 		if errors.Is(err, storage_error.ErrNotFound) {
 			log.Warn("user doesn't exists", sl.Err(err))
-			return models.User{}, fmt.Errorf("%s: %w", op, err)
+			return models.User{}, fmt.Errorf("%s: %w", op, service_error.ErrNotFound)
 		}
 
 		log.Error("cannot fetch user by id", sl.Err(err))
@@ -81,7 +82,7 @@ func (u *UserService) GetUserById(ctx context.Context, id uuid.UUID) (models.Use
 
 // InsertUser implements service.IUserService.
 func (u *UserService) InsertUser(ctx context.Context, user models.User) (models.User, error) {
-	const op = "service.GetUsers"
+	const op = "service.InsertUser"
 	log := u.log.With(
 		op, "op",
 	)
@@ -96,7 +97,7 @@ func (u *UserService) InsertUser(ctx context.Context, user models.User) (models.
 	if err != nil {
 		if errors.Is(err, storage_error.ErrAlreadyExists) {
 			log.Warn("user already exists", sl.Err(err))
-			return models.User{}, fmt.Errorf("%s: %w", op, err)
+			return models.User{}, fmt.Errorf("%s: %w", op, service_error.ErrAlreadyExists)
 		}
 
 		log.Error("cannot insert user", sl.Err(err))
@@ -108,7 +109,7 @@ func (u *UserService) InsertUser(ctx context.Context, user models.User) (models.
 
 // DeleteUser implements service.IUserService.
 func (u *UserService) DeleteUser(ctx context.Context, id uuid.UUID) (models.User, error) {
-	const op = "service.GetUsers"
+	const op = "service.DeleteUser"
 	log := u.log.With(
 		op, "op",
 	)
@@ -123,7 +124,7 @@ func (u *UserService) DeleteUser(ctx context.Context, id uuid.UUID) (models.User
 	if err != nil {
 		if errors.Is(err, storage_error.ErrNotFound) {
 			log.Warn("user not found", sl.Err(err))
-			return models.User{}, fmt.Errorf("%s: %w", op, err)
+			return models.User{}, fmt.Errorf("%s: %w", op, service_error.ErrNotFound)
 		}
 
 		log.Error("cannot delete user", sl.Err(err))

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net"
 	"users-service/internal/domain/interfaces/service"
+	"users-service/internal/grpc/userservice"
 
 	"google.golang.org/grpc"
 )
@@ -18,7 +19,7 @@ type App struct {
 func New(log *slog.Logger, usersservice service.IUserService, port int) *App {
 	gRPCServer := grpc.NewServer()
 
-	// grpcusers.Register(gRPCServer, usersservice)
+	userservice.Register(gRPCServer, usersservice, log)
 
 	return &App{
 		log:        log,

@@ -12,6 +12,7 @@ type Config struct {
 	Env            string        `yaml:"env" env-default:"local"`
 	Grpc           GrpcConfig    `yaml:"grpc"`
 	ExpirationTime time.Duration `yaml:"expiration_time"`
+	ConnStr        string        `yaml:"conn_str"`
 }
 
 type GrpcConfig struct {

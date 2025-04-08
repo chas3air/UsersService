@@ -1,5 +1,6 @@
 env: "local"
 expiration_time: 10s
+conn_str: "postgres://postgres:123@psql:5432/users?sslmode=disable"
 
 grpc:
   port: 50051

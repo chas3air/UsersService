@@ -139,7 +139,7 @@ func (s *serverAPI) InsertUser(ctx context.Context, req *umv1.InsertRequest) (*u
 }
 
 func (s *serverAPI) DeleteUser(ctx context.Context, req *umv1.DeleteResuest) (*umv1.DeleteResponse, error) {
-	const op = "grpc.userservice.GetUserById"
+	const op = "grpc.userservice.delete"
 	log := s.log.With(
 		op, "op",
 	)

@@ -48,6 +48,10 @@ func applyMigrations(db *sql.DB, migrationsPath string) error {
 	return goose.Up(db, migrationsPath)
 }
 
+func (p *PsqlStorage) Close() {
+	p.DB.Close()
+}
+
 // GetUsers implements storage.IUserStorage.
 func (p *PsqlStorage) GetUsers(ctx context.Context) ([]models.User, error) {
 	const op = "service.GetUsers"
@@ -66,7 +70,7 @@ func (p *PsqlStorage) GetUsers(ctx context.Context) ([]models.User, error) {
 	`)
 	if err != nil {
 		log.Error("error scanning rows", sl.Err(err))
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("%s: %w", op, storage_error.ErrNotFound)
 	}
 	defer rows.Close()
 
@@ -82,17 +86,12 @@ func (p *PsqlStorage) GetUsers(ctx context.Context) ([]models.User, error) {
 		users = append(users, buff_user)
 	}
 
-	if len(users) == 0 {
-		log.Warn("no users found")
-		return nil, storage_error.ErrNotFound
-	}
-
 	return users, nil
 }
 
 // GetUserById implements storage.IUserStorage.
 func (p *PsqlStorage) GetUserById(ctx context.Context, id uuid.UUID) (models.User, error) {
-	const op = "service.GetUsers"
+	const op = "service.GetUserById"
 	log := p.log.With(
 		op, "op",
 	)
@@ -114,6 +113,7 @@ func (p *PsqlStorage) GetUserById(ctx context.Context, id uuid.UUID) (models.Use
 			log.Warn("user not found", sl.Err(err))
 			return models.User{}, storage_error.ErrNotFound
 		}
+
 		log.Error("cannot scan user", sl.Err(err))
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -123,7 +123,7 @@ func (p *PsqlStorage) GetUserById(ctx context.Context, id uuid.UUID) (models.Use
 
 // InsertUser implements storage.IUserStorage.
 func (p *PsqlStorage) InsertUser(ctx context.Context, user models.User) (models.User, error) {
-	const op = "service.GetUsers"
+	const op = "service.InsertUser"
 	log := p.log.With(
 		op, "op",
 	)
@@ -141,7 +141,7 @@ func (p *PsqlStorage) InsertUser(ctx context.Context, user models.User) (models.
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
 			log.Warn("user already exists", sl.Err(err))
-			return models.User{}, fmt.Errorf("%s: user already exists", op)
+			return models.User{}, fmt.Errorf("%s: %w", op, storage_error.ErrAlreadyExists)
 		}
 
 		log.Error("cannot insert user", sl.Err(err))
@@ -153,7 +153,7 @@ func (p *PsqlStorage) InsertUser(ctx context.Context, user models.User) (models.
 
 // DeleteUser implements storage.IUserStorage.
 func (p *PsqlStorage) DeleteUser(ctx context.Context, id uuid.UUID) (models.User, error) {
-	const op = "service.GetUsers"
+	const op = "service.DeleteUser"
 	log := p.log.With(
 		op, "op",
 	)
@@ -168,7 +168,7 @@ func (p *PsqlStorage) DeleteUser(ctx context.Context, id uuid.UUID) (models.User
 	if err != nil {
 		if errors.Is(err, storage_error.ErrNotFound) {
 			log.Warn("user doesn't exists", sl.Err(err))
-			return models.User{}, fmt.Errorf("%s: %w", op, err)
+			return models.User{}, fmt.Errorf("%s: %w", op, storage_error.ErrNotFound)
 		}
 
 		log.Error("cannot delete user", sl.Err(err))

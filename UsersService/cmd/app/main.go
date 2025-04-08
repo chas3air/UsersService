@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 	"users-service/internal/app"
+	"users-service/internal/storage/userstorage"
 	"users-service/pkg/config"
 	"users-service/pkg/logger"
 )
@@ -16,7 +17,9 @@ func main() {
 
 	log.Info("Ready to change")
 
-	application := app.New(log, nil, config.Grpc.Port)
+	storage := userstorage.New(log, config.ConnStr)
+
+	application := app.New(log, storage, config.Grpc.Port)
 
 	go func() {
 		application.GRPCServer.MustRun()
@@ -31,7 +34,7 @@ func main() {
 	application.GRPCServer.Stop()
 
 	log.Info("Stoping db")
-	// storage.Close()
+	storage.Close()
 
 	log.Info("application is stopped")
 }

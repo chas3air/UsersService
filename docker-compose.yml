@@ -1,0 +1,35 @@
+networks:
+  work_net:
+
+volumes:
+  users_volume:
+
+services:
+  users_service:
+    build: 
+      context: ./UsersService
+    container_name: users_service
+    ports:
+      - 50051:50051
+    networks:
+      - work_net
+    depends_on:
+      psql:
+        condition: service_healthy    
+
+  psql:
+    image: postgres
+    container_name: psql
+    ports:
+      - "5000:5432"
+    networks:
+      - work_net
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: users
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
