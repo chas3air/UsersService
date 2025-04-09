@@ -47,7 +47,6 @@ func (u *UserHandler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteUsersToBody(w, http.StatusOK, users)
-	return
 }
 
 func (u *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +83,6 @@ func (u *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	WriteUsersToBody(w, http.StatusOK, user)
-	return
 }
 
 func (u *UserHandler) InsertUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +112,6 @@ func (u *UserHandler) InsertUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	WriteUsersToBody(w, http.StatusCreated, user)
-	return
 }
 
 func (u *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +148,6 @@ func (u *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	WriteUsersToBody(w, http.StatusOK, user)
-	return
 }
 
 func WriteUsersToBody(w http.ResponseWriter, status int, users any) {
