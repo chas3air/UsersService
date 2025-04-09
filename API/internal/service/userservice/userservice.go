@@ -110,6 +110,33 @@ func (u *UserService) InsertUser(ctx context.Context, user models.User) (models.
 	return user, nil
 }
 
+func (u *UserService) UpdateUser(ctx context.Context, id uuid.UUID, user models.User) (models.User, error) {
+	const op = "service.user.UpdateUser"
+	log := u.log.With(
+		"op", op,
+	)
+
+	select {
+	case <-ctx.Done():
+		log.Error("request time out")
+		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
+	default:
+	}
+
+	user, err := u.storage.UpdateUser(ctx, id, user)
+	if err != nil {
+		if errors.Is(err, storage_error.ErrNotFound) {
+			log.Warn("user not found", sl.Err(err))
+			return models.User{}, fmt.Errorf("%s: %w", op, service_error.ErrNotFound)
+		}
+
+		log.Error("cannot update user", sl.Err(err))
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
 // DeleteUser implements service.IUserService.
 func (u *UserService) DeleteUser(ctx context.Context, id uuid.UUID) (models.User, error) {
 	const op = "service.user.DeleteUser"

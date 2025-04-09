@@ -138,6 +138,53 @@ func (s *serverAPI) InsertUser(ctx context.Context, req *umv1.InsertRequest) (*u
 	}, nil
 }
 
+func (s *serverAPI) UpdateUser(ctx context.Context, req *umv1.UpdateRequest) (*umv1.UpdateResponse, error) {
+	const op = "grpc.userservice.update"
+	log := s.log.With(
+		"op", op,
+	)
+
+	select {
+	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
+		return nil, status.Error(codes.DeadlineExceeded, "request time out")
+	default:
+	}
+
+	req_id := req.GetId()
+	if req_id == "" {
+		log.Error("id is required", sl.Err(fmt.Errorf("%s: %s", op, "id is required")))
+		return nil, status.Error(codes.InvalidArgument, "id is required")
+	}
+
+	id, err := uuid.Parse(req_id)
+	if err != nil {
+		log.Error("wrong id, must be uuid", sl.Err(fmt.Errorf("%s: %s", op, "wrong id, must be uuid")))
+		return nil, status.Error(codes.Internal, "wrong id, must be uuid")
+	}
+
+	req_user := req.GetUser()
+	if req_user == nil {
+		log.Error("user is required", sl.Err(fmt.Errorf("%s: %s", op, "user is required")))
+		return nil, status.Error(codes.InvalidArgument, "user is required")
+	}
+
+	user, err := s.userservice.UpdateUser(ctx, id, profiles.ProtoUserToUser(req_user))
+	if err != nil {
+		if errors.Is(err, service_error.ErrNotFound) {
+			log.Warn("user not found", sl.Err(err))
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+
+		log.Error("cannot update user", sl.Err(err))
+		return nil, status.Error(codes.Internal, "cannot update user")
+	}
+
+	return &umv1.UpdateResponse{
+		User: profiles.UserToProtoUser(user),
+	}, nil
+}
+
 func (s *serverAPI) DeleteUser(ctx context.Context, req *umv1.DeleteResuest) (*umv1.DeleteResponse, error) {
 	const op = "grpc.userservice.delete"
 	log := s.log.With(

@@ -37,6 +37,7 @@ func (a *App) Run() {
 	r.HandleFunc("/api/v1/users", user_handler.GetUsersHandler).Methods(http.MethodGet)
 	r.HandleFunc("/api/v1/users/{id}", user_handler.GetUserByIdHandler).Methods(http.MethodGet)
 	r.HandleFunc("/api/v1/users", user_handler.InsertUserHandler).Methods(http.MethodPost)
+	r.HandleFunc("/api/v1/users/{id}", user_handler.UpdateUserHandler).Methods(http.MethodPut)
 	r.HandleFunc("/api/v1/users/{id}", user_handler.DeleteUserHandler).Methods(http.MethodDelete)
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", a.config.Api.Port), r); err != nil {

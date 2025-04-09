@@ -140,6 +140,42 @@ func (g *GRPCUserServer) InsertUser(ctx context.Context, user models.User) (mode
 	return profiles.ProtoUserToUser(res.GetUser()), nil
 }
 
+func (g *GRPCUserServer) UpdateUser(ctx context.Context, id uuid.UUID, user models.User) (models.User, error) {
+	const op = "storage.user.UpdateUser"
+	log := g.log.With(
+		"op", op,
+	)
+
+	select {
+	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
+		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
+	default:
+	}
+
+	conn, err := grpc.NewClient(
+		fmt.Sprintf("%s:%d", g.host, g.port),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Error("Failed to connect to gRPC server", sl.Err(err))
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+	defer conn.Close()
+
+	c := umv1.NewUsersServiceClient(conn)
+	res, err := c.UpdateUser(ctx,
+		&umv1.UpdateRequest{
+			Id:   id.String(),
+			User: profiles.UserToProtoUser(user),
+		})
+	if err != nil {
+		return models.User{}, g.handleError(err, op)
+	}
+
+	return profiles.ProtoUserToUser(res.GetUser()), nil
+}
+
 // DeleteUser implements storage.IUserStorage.
 func (g *GRPCUserServer) DeleteUser(ctx context.Context, id uuid.UUID) (models.User, error) {
 	const op = "storage.user.DeleteUser"
@@ -173,17 +209,6 @@ func (g *GRPCUserServer) DeleteUser(ctx context.Context, id uuid.UUID) (models.U
 	}
 
 	return profiles.ProtoUserToUser(res.GetUser()), nil
-}
-
-func (g *GRPCUserServer) createClientConn() (umv1.UsersServiceClient, error) {
-	conn, err := grpc.NewClient(
-		fmt.Sprintf("%s:%d", g.host, g.port),
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		g.log.Error("Failed to connect to gRPC server", sl.Err(err))
-		return nil, err
-	}
-	return umv1.NewUsersServiceClient(conn), nil
 }
 
 func (g *GRPCUserServer) handleError(err error, operation string) error {

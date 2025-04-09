@@ -23,6 +23,7 @@ const (
 	UsersService_GetUsers_FullMethodName    = "/github.chas3air.todo_list.usersservice.UsersService/GetUsers"
 	UsersService_GetUserById_FullMethodName = "/github.chas3air.todo_list.usersservice.UsersService/GetUserById"
 	UsersService_InsertUser_FullMethodName  = "/github.chas3air.todo_list.usersservice.UsersService/InsertUser"
+	UsersService_UpdateUser_FullMethodName  = "/github.chas3air.todo_list.usersservice.UsersService/UpdateUser"
 	UsersService_DeleteUser_FullMethodName  = "/github.chas3air.todo_list.usersservice.UsersService/DeleteUser"
 )
 
@@ -33,6 +34,7 @@ type UsersServiceClient interface {
 	GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetUsersResponse, error)
 	GetUserById(ctx context.Context, in *GetUserByIdRequest, opts ...grpc.CallOption) (*GetUserByIdResponse, error)
 	InsertUser(ctx context.Context, in *InsertRequest, opts ...grpc.CallOption) (*InsertResponse, error)
+	UpdateUser(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error)
 	DeleteUser(ctx context.Context, in *DeleteResuest, opts ...grpc.CallOption) (*DeleteResponse, error)
 }
 
@@ -74,6 +76,16 @@ func (c *usersServiceClient) InsertUser(ctx context.Context, in *InsertRequest, 
 	return out, nil
 }
 
+func (c *usersServiceClient) UpdateUser(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateResponse)
+	err := c.cc.Invoke(ctx, UsersService_UpdateUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *usersServiceClient) DeleteUser(ctx context.Context, in *DeleteResuest, opts ...grpc.CallOption) (*DeleteResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeleteResponse)
@@ -91,6 +103,7 @@ type UsersServiceServer interface {
 	GetUsers(context.Context, *emptypb.Empty) (*GetUsersResponse, error)
 	GetUserById(context.Context, *GetUserByIdRequest) (*GetUserByIdResponse, error)
 	InsertUser(context.Context, *InsertRequest) (*InsertResponse, error)
+	UpdateUser(context.Context, *UpdateRequest) (*UpdateResponse, error)
 	DeleteUser(context.Context, *DeleteResuest) (*DeleteResponse, error)
 	mustEmbedUnimplementedUsersServiceServer()
 }
@@ -110,6 +123,9 @@ func (UnimplementedUsersServiceServer) GetUserById(context.Context, *GetUserById
 }
 func (UnimplementedUsersServiceServer) InsertUser(context.Context, *InsertRequest) (*InsertResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InsertUser not implemented")
+}
+func (UnimplementedUsersServiceServer) UpdateUser(context.Context, *UpdateRequest) (*UpdateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
 }
 func (UnimplementedUsersServiceServer) DeleteUser(context.Context, *DeleteResuest) (*DeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
@@ -189,6 +205,24 @@ func _UsersService_InsertUser_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UsersService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServiceServer).UpdateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UsersService_UpdateUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServiceServer).UpdateUser(ctx, req.(*UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UsersService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteResuest)
 	if err := dec(in); err != nil {
@@ -225,6 +259,10 @@ var UsersService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InsertUser",
 			Handler:    _UsersService_InsertUser_Handler,
+		},
+		{
+			MethodName: "UpdateUser",
+			Handler:    _UsersService_UpdateUser_Handler,
 		},
 		{
 			MethodName: "DeleteUser",

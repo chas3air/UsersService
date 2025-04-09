@@ -77,8 +77,8 @@ func (u *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		log.Error("cannot get usr by id", sl.Err(err))
-		http.Error(w, "cannot get usr by id", http.StatusInternalServerError)
+		log.Error("cannot get user by id", sl.Err(err))
+		http.Error(w, "cannot get user by id", http.StatusInternalServerError)
 		return
 	}
 
@@ -112,6 +112,49 @@ func (u *UserHandler) InsertUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	WriteUsersToBody(w, http.StatusCreated, user)
+}
+
+func (u *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	const op = "handler.user.UpdateUserHandler"
+	log := u.log.With(
+		"op", op,
+	)
+
+	id, ok := mux.Vars(r)["id"]
+	if !ok {
+		log.Error("id is required", sl.Err(fmt.Errorf("id is required")))
+		http.Error(w, "id is required", http.StatusBadRequest)
+		return
+	}
+
+	uuid_id, err := uuid.Parse(id)
+	if err != nil {
+		log.Error("id must be uuid", sl.Err(err))
+		http.Error(w, "id must be uuid", http.StatusBadRequest)
+		return
+	}
+
+	var user models.User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		log.Error("cannot read and parse request body", sl.Err(err))
+		http.Error(w, "cannot read and parse request body", http.StatusBadRequest)
+		return
+	}
+
+	user, err = u.service.UpdateUser(r.Context(), uuid_id, user)
+	if err != nil {
+		if errors.Is(err, service_error.ErrNotFound) {
+			log.Warn("user not found", sl.Err(err))
+			http.Error(w, "user not found", http.StatusNotFound)
+			return
+		}
+
+		log.Error("cannot update user", sl.Err(err))
+		http.Error(w, "cannot update user", http.StatusInternalServerError)
+		return
+	}
+
+	WriteUsersToBody(w, http.StatusOK, user)
 }
 
 func (u *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +194,7 @@ func (u *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func WriteUsersToBody(w http.ResponseWriter, status int, users any) {
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(users); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -10,6 +10,7 @@ import (
 type IUserService interface {
 	GetUsers(context.Context) ([]models.User, error)
 	GetUserById(context.Context, uuid.UUID) (models.User, error)
+	UpdateUser(context.Context, uuid.UUID, models.User) (models.User, error)
 	InsertUser(context.Context, models.User) (models.User, error)
 	DeleteUser(context.Context, uuid.UUID) (models.User, error)
 }

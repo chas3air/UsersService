@@ -54,13 +54,14 @@ func (p *PsqlStorage) Close() {
 
 // GetUsers implements storage.IUserStorage.
 func (p *PsqlStorage) GetUsers(ctx context.Context) ([]models.User, error) {
-	const op = "service.GetUsers"
+	const op = "storage.user.GetUsers"
 	log := p.log.With(
 		op, "op",
 	)
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return nil, fmt.Errorf("%s: %w", op, ctx.Err())
 	default:
 	}
@@ -91,13 +92,14 @@ func (p *PsqlStorage) GetUsers(ctx context.Context) ([]models.User, error) {
 
 // GetUserById implements storage.IUserStorage.
 func (p *PsqlStorage) GetUserById(ctx context.Context, id uuid.UUID) (models.User, error) {
-	const op = "service.GetUserById"
+	const op = "storage.user.GetUserById"
 	log := p.log.With(
 		op, "op",
 	)
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
 	default:
 	}
@@ -123,13 +125,14 @@ func (p *PsqlStorage) GetUserById(ctx context.Context, id uuid.UUID) (models.Use
 
 // InsertUser implements storage.IUserStorage.
 func (p *PsqlStorage) InsertUser(ctx context.Context, user models.User) (models.User, error) {
-	const op = "service.InsertUser"
+	const op = "storage.user.InsertUser"
 	log := p.log.With(
 		op, "op",
 	)
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
 	default:
 	}
@@ -151,15 +154,53 @@ func (p *PsqlStorage) InsertUser(ctx context.Context, user models.User) (models.
 	return user, nil
 }
 
+func (p *PsqlStorage) UpdateUser(ctx context.Context, id uuid.UUID, user models.User) (models.User, error) {
+	const op = "storage.user.UpdateUser"
+	log := p.log.With(
+		"op", op,
+	)
+
+	select {
+	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
+		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
+	default:
+	}
+
+	result, err := p.DB.ExecContext(ctx, `
+		UPDATE `+UsersTableName+`
+		SET login=$1, password=$2
+		WHERE id=$3
+	`, user.Login, user.Password, id)
+	if err != nil {
+		log.Error("fialed to update user", sl.Err(err))
+		return user, fmt.Errorf("%s: %w", op, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Error("Error get rows affected", sl.Err(err))
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if rowsAffected == 0 {
+		log.Error("Zero rows affected")
+		return models.User{}, fmt.Errorf("%s: %w", op, storage_error.ErrNotFound)
+	}
+
+	return user, nil
+}
+
 // DeleteUser implements storage.IUserStorage.
 func (p *PsqlStorage) DeleteUser(ctx context.Context, id uuid.UUID) (models.User, error) {
-	const op = "service.DeleteUser"
+	const op = "storage.user.DeleteUser"
 	log := p.log.With(
 		op, "op",
 	)
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
 	default:
 	}

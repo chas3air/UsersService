@@ -28,13 +28,14 @@ func New(log *slog.Logger, storage storage.IUserStorage) *UserService {
 
 // GetUsers implements service.IUserService.
 func (u *UserService) GetUsers(ctx context.Context) ([]models.User, error) {
-	const op = "service.GetUsers"
+	const op = "service.user.GetUsers"
 	log := u.log.With(
 		op, "op",
 	)
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return nil, fmt.Errorf("%s: %w", op, ctx.Err())
 	default:
 	}
@@ -55,13 +56,14 @@ func (u *UserService) GetUsers(ctx context.Context) ([]models.User, error) {
 
 // GetUserById implements service.IUserService.
 func (u *UserService) GetUserById(ctx context.Context, id uuid.UUID) (models.User, error) {
-	const op = "service.GetUserById"
+	const op = "service.user.GetUserById"
 	log := u.log.With(
 		op, "op",
 	)
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
 	default:
 	}
@@ -82,13 +84,14 @@ func (u *UserService) GetUserById(ctx context.Context, id uuid.UUID) (models.Use
 
 // InsertUser implements service.IUserService.
 func (u *UserService) InsertUser(ctx context.Context, user models.User) (models.User, error) {
-	const op = "service.InsertUser"
+	const op = "service.user.InsertUser"
 	log := u.log.With(
 		op, "op",
 	)
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
 	default:
 	}
@@ -107,15 +110,43 @@ func (u *UserService) InsertUser(ctx context.Context, user models.User) (models.
 	return user, nil
 }
 
+func (u *UserService) UpdateUser(ctx context.Context, id uuid.UUID, user models.User) (models.User, error) {
+	const op = "service.user.UpdateUser"
+	log := u.log.With(
+		"op", op,
+	)
+
+	select {
+	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
+		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
+	default:
+	}
+
+	user, err := u.storage.UpdateUser(ctx, id, user)
+	if err != nil {
+		if errors.Is(err, storage_error.ErrNotFound) {
+			log.Warn("user doesn't exists", sl.Err(err))
+			return models.User{}, fmt.Errorf("%s: %w", op, service_error.ErrNotFound)
+		}
+
+		log.Error("cannot upfate user", sl.Err(err))
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
 // DeleteUser implements service.IUserService.
 func (u *UserService) DeleteUser(ctx context.Context, id uuid.UUID) (models.User, error) {
-	const op = "service.DeleteUser"
+	const op = "service.user.DeleteUser"
 	log := u.log.With(
 		op, "op",
 	)
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
 	default:
 	}
