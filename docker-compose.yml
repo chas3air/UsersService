@@ -5,6 +5,18 @@ volumes:
   users_volume:
 
 services:
+  api:
+    build:
+      context: ./API
+    container_name: api
+    ports:
+      - 8080:8080
+    networks:
+      - work_net
+    depends_on:
+      users_service:
+        condition: service_started
+
   users_service:
     build: 
       context: ./UsersService

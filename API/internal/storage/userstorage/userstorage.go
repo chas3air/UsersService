@@ -72,7 +72,7 @@ func (g *GRPCUserServer) GetUsers(ctx context.Context) ([]models.User, error) {
 
 // GetUserById implements storage.IUserStorage.
 func (g *GRPCUserServer) GetUserById(ctx context.Context, id uuid.UUID) (models.User, error) {
-	const op = "storage.user.GetUsers"
+	const op = "storage.user.GetUserById"
 	log := g.log.With(
 		"op", op,
 	)
@@ -107,7 +107,7 @@ func (g *GRPCUserServer) GetUserById(ctx context.Context, id uuid.UUID) (models.
 
 // InsertUser implements storage.IUserStorage.
 func (g *GRPCUserServer) InsertUser(ctx context.Context, user models.User) (models.User, error) {
-	const op = "storage.user.GetUsers"
+	const op = "storage.user.InsertUser"
 	log := g.log.With(
 		"op", op,
 	)
@@ -142,7 +142,7 @@ func (g *GRPCUserServer) InsertUser(ctx context.Context, user models.User) (mode
 
 // DeleteUser implements storage.IUserStorage.
 func (g *GRPCUserServer) DeleteUser(ctx context.Context, id uuid.UUID) (models.User, error) {
-	const op = "storage.user.GetUsers"
+	const op = "storage.user.DeleteUser"
 	log := g.log.With(
 		"op", op,
 	)
