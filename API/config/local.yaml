@@ -5,5 +5,5 @@ api:
   port: 8080
   timeout: 10h
 
-userserver_port: user_server
 userserver_host: 50051
+userserver_port: "user_server"

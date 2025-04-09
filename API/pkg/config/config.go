@@ -12,8 +12,8 @@ type Config struct {
 	Env            string        `yaml:"env" env-default:"local"`
 	Api            ApiConfig     `yaml:"api"`
 	ExpirationTime time.Duration `yaml:"expiration_time"`
-	ServerHost     string        `yaml:"userserver_host"`
-	ServerPort     int           `yaml:"userserver_port"`
+	ServerHost     string        `yaml:"userserver_hort"`
+	ServerPort     int           `yaml:"userserver_post"`
 }
 
 type ApiConfig struct {

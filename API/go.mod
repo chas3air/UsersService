@@ -19,6 +19,7 @@ require (
 
 require (
 	github.com/fatih/color v1.18.0
+	github.com/gorilla/mux v1.8.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
