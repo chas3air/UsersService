@@ -33,6 +33,13 @@ func (u *UserService) GetUsers(ctx context.Context) ([]models.User, error) {
 		"op", op,
 	)
 
+	select {
+	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
+		return nil, fmt.Errorf("%s: %w", op, ctx.Err())
+	default:
+	}
+
 	users, err := u.storage.GetUsers(ctx)
 	if err != nil {
 		if errors.Is(err, storage_error.ErrNotFound) {
@@ -53,6 +60,13 @@ func (u *UserService) GetUserById(ctx context.Context, id uuid.UUID) (models.Use
 	log := u.log.With(
 		"op", op,
 	)
+
+	select {
+	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
+		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
+	default:
+	}
 
 	user, err := u.storage.GetUserById(ctx, id)
 	if err != nil {
@@ -75,6 +89,13 @@ func (u *UserService) InsertUser(ctx context.Context, user models.User) (models.
 		"op", op,
 	)
 
+	select {
+	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
+		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
+	default:
+	}
+
 	user, err := u.storage.InsertUser(ctx, user)
 	if err != nil {
 		if errors.Is(err, storage_error.ErrAlreadyExists) {
@@ -95,6 +116,13 @@ func (u *UserService) DeleteUser(ctx context.Context, id uuid.UUID) (models.User
 	log := u.log.With(
 		"op", op,
 	)
+
+	select {
+	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
+		return models.User{}, fmt.Errorf("%s: %w", op, ctx.Err())
+	default:
+	}
 
 	user, err := u.storage.DeleteUser(ctx, id)
 	if err != nil {
