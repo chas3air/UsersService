@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"users-service/internal/domain/models"
-	storage_error "users-service/internal/storage"
+	storageerror "users-service/internal/storage"
 	"users-service/pkg/logger/sl"
 
 	"github.com/google/uuid"
@@ -71,20 +71,20 @@ func (p *PsqlStorage) GetUsers(ctx context.Context) ([]models.User, error) {
 	`)
 	if err != nil {
 		log.Error("error scanning rows", sl.Err(err))
-		return nil, fmt.Errorf("%s: %w", op, storage_error.ErrNotFound)
+		return nil, fmt.Errorf("%s: %w", op, storageerror.ErrNotFound)
 	}
 	defer rows.Close()
 
 	var users = make([]models.User, 0, 5)
-	var buff_user models.User
+	var buffUser models.User
 	for rows.Next() {
-		err := rows.Scan(&buff_user.Id, &buff_user.Login, &buff_user.Password)
+		err := rows.Scan(&buffUser.Id, &buffUser.Login, &buffUser.Password)
 		if err != nil {
 			log.Warn("cannot scan row", sl.Err(err))
 			continue
 		}
 
-		users = append(users, buff_user)
+		users = append(users, buffUser)
 	}
 
 	return users, nil
@@ -113,7 +113,7 @@ func (p *PsqlStorage) GetUserById(ctx context.Context, id uuid.UUID) (models.Use
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Warn("user not found", sl.Err(err))
-			return models.User{}, storage_error.ErrNotFound
+			return models.User{}, storageerror.ErrNotFound
 		}
 
 		log.Error("cannot scan user", sl.Err(err))
@@ -144,7 +144,7 @@ func (p *PsqlStorage) InsertUser(ctx context.Context, user models.User) (models.
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
 			log.Warn("user already exists", sl.Err(err))
-			return models.User{}, fmt.Errorf("%s: %w", op, storage_error.ErrAlreadyExists)
+			return models.User{}, fmt.Errorf("%s: %w", op, storageerror.ErrAlreadyExists)
 		}
 
 		log.Error("cannot insert user", sl.Err(err))
@@ -185,7 +185,7 @@ func (p *PsqlStorage) UpdateUser(ctx context.Context, id uuid.UUID, user models.
 
 	if rowsAffected == 0 {
 		log.Error("Zero rows affected")
-		return models.User{}, fmt.Errorf("%s: %w", op, storage_error.ErrNotFound)
+		return models.User{}, fmt.Errorf("%s: %w", op, storageerror.ErrNotFound)
 	}
 
 	return user, nil
@@ -207,9 +207,9 @@ func (p *PsqlStorage) DeleteUser(ctx context.Context, id uuid.UUID) (models.User
 
 	user, err := p.GetUserById(ctx, id)
 	if err != nil {
-		if errors.Is(err, storage_error.ErrNotFound) {
+		if errors.Is(err, storageerror.ErrNotFound) {
 			log.Warn("user doesn't exists", sl.Err(err))
-			return models.User{}, fmt.Errorf("%s: %w", op, storage_error.ErrNotFound)
+			return models.User{}, fmt.Errorf("%s: %w", op, storageerror.ErrNotFound)
 		}
 
 		log.Error("cannot delete user", sl.Err(err))

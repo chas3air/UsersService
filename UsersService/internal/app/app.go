@@ -12,11 +12,11 @@ type App struct {
 }
 
 func New(log *slog.Logger, storage storage.IUserStorage, port int) *App {
-	userservice := userservice.New(log, storage)
+	userService := userservice.New(log, storage)
 
-	grpcapp := grpcapp.New(log, userservice, port)
+	grpcApp := grpcapp.New(log, userService, port)
 
 	return &App{
-		GRPCServer: grpcapp,
+		GRPCServer: grpcApp,
 	}
 }

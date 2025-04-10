@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"users-service/internal/domain/interfaces/service"
 	"users-service/internal/domain/profiles"
-	service_error "users-service/internal/service"
+	serviceerror "users-service/internal/service"
 	"users-service/pkg/logger/sl"
 	umv1 "users-service/proto/gen"
 
@@ -20,13 +20,13 @@ import (
 
 type serverAPI struct {
 	log         *slog.Logger
-	userservice service.IUserService
+	userService service.IUserService
 	umv1.UnimplementedUsersServiceServer
 }
 
-func Register(grpc *grpc.Server, userservice service.IUserService, log *slog.Logger) {
+func Register(grpc *grpc.Server, userService service.IUserService, log *slog.Logger) {
 	umv1.RegisterUsersServiceServer(grpc, &serverAPI{
-		userservice: userservice,
+		userService: userService,
 		log:         log,
 	})
 }
@@ -39,13 +39,14 @@ func (s *serverAPI) GetUsers(ctx context.Context, req *emptypb.Empty) (*umv1.Get
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return nil, status.Error(codes.DeadlineExceeded, "request time out")
 	default:
 	}
 
-	users, err := s.userservice.GetUsers(ctx)
+	users, err := s.userService.GetUsers(ctx)
 	if err != nil {
-		if errors.Is(err, service_error.ErrNotFound) {
+		if errors.Is(err, serviceerror.ErrNotFound) {
 			log.Warn("users not found", sl.Err(err))
 			return nil, status.Error(codes.NotFound, "users not found")
 		}
@@ -54,13 +55,13 @@ func (s *serverAPI) GetUsers(ctx context.Context, req *emptypb.Empty) (*umv1.Get
 		return nil, status.Error(codes.Internal, "cannot fetch users")
 	}
 
-	var res_users = make([]*umv1.User, 0, 5)
+	var resUsers = make([]*umv1.User, 0, 5)
 	for _, user := range users {
-		res_users = append(res_users, profiles.UserToProtoUser(user))
+		resUsers = append(resUsers, profiles.UserToProtoUser(user))
 	}
 
 	return &umv1.GetUsersResponse{
-		Users: res_users,
+		Users: resUsers,
 	}, nil
 }
 
@@ -72,25 +73,26 @@ func (s *serverAPI) GetUserById(ctx context.Context, req *umv1.GetUserByIdReques
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return nil, status.Error(codes.DeadlineExceeded, "request time out")
 	default:
 	}
 
-	req_id := req.GetId()
-	if req_id == "" {
+	reqId := req.GetId()
+	if reqId == "" {
 		log.Error("id is required", sl.Err(fmt.Errorf("%s: %s", op, "id is required")))
 		return nil, status.Error(codes.InvalidArgument, "id is required")
 	}
 
-	id, err := uuid.Parse(req_id)
+	id, err := uuid.Parse(reqId)
 	if err != nil {
 		log.Error("wrong id, must be uuid", sl.Err(fmt.Errorf("%s: %s", op, "wrong id, must be uuid")))
 		return nil, status.Error(codes.Internal, "wrong id, must be uuid")
 	}
 
-	user, err := s.userservice.GetUserById(ctx, id)
+	user, err := s.userService.GetUserById(ctx, id)
 	if err != nil {
-		if errors.Is(err, service_error.ErrNotFound) {
+		if errors.Is(err, serviceerror.ErrNotFound) {
 			log.Warn("user doesn't exists", sl.Err(err))
 			return nil, status.Error(codes.NotFound, "user doesn't exists")
 		}
@@ -112,19 +114,20 @@ func (s *serverAPI) InsertUser(ctx context.Context, req *umv1.InsertRequest) (*u
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return nil, status.Error(codes.DeadlineExceeded, "request time out")
 	default:
 	}
 
-	req_user := req.GetUser()
-	if req_user == nil {
+	reqUser := req.GetUser()
+	if reqUser == nil {
 		log.Error("user is required", sl.Err(fmt.Errorf("%s: %s", op, "user is required")))
 		return nil, status.Error(codes.InvalidArgument, "user is required")
 	}
 
-	user, err := s.userservice.InsertUser(ctx, profiles.ProtoUserToUser(req_user))
+	user, err := s.userService.InsertUser(ctx, profiles.ProtoUserToUser(reqUser))
 	if err != nil {
-		if errors.Is(err, service_error.ErrAlreadyExists) {
+		if errors.Is(err, serviceerror.ErrAlreadyExists) {
 			log.Warn("user already exists", sl.Err(err))
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		}
@@ -151,13 +154,13 @@ func (s *serverAPI) UpdateUser(ctx context.Context, req *umv1.UpdateRequest) (*u
 	default:
 	}
 
-	req_id := req.GetId()
-	if req_id == "" {
+	reqId := req.GetId()
+	if reqId == "" {
 		log.Error("id is required", sl.Err(fmt.Errorf("%s: %s", op, "id is required")))
 		return nil, status.Error(codes.InvalidArgument, "id is required")
 	}
 
-	id, err := uuid.Parse(req_id)
+	id, err := uuid.Parse(reqId)
 	if err != nil {
 		log.Error("wrong id, must be uuid", sl.Err(fmt.Errorf("%s: %s", op, "wrong id, must be uuid")))
 		return nil, status.Error(codes.Internal, "wrong id, must be uuid")
@@ -169,9 +172,9 @@ func (s *serverAPI) UpdateUser(ctx context.Context, req *umv1.UpdateRequest) (*u
 		return nil, status.Error(codes.InvalidArgument, "user is required")
 	}
 
-	user, err := s.userservice.UpdateUser(ctx, id, profiles.ProtoUserToUser(req_user))
+	user, err := s.userService.UpdateUser(ctx, id, profiles.ProtoUserToUser(req_user))
 	if err != nil {
-		if errors.Is(err, service_error.ErrNotFound) {
+		if errors.Is(err, serviceerror.ErrNotFound) {
 			log.Warn("user not found", sl.Err(err))
 			return nil, status.Error(codes.NotFound, "user not found")
 		}
@@ -193,25 +196,26 @@ func (s *serverAPI) DeleteUser(ctx context.Context, req *umv1.DeleteResuest) (*u
 
 	select {
 	case <-ctx.Done():
+		log.Error("request time out", sl.Err(ctx.Err()))
 		return nil, status.Error(codes.DeadlineExceeded, "request time out")
 	default:
 	}
 
-	req_id := req.GetId()
-	if req_id == "" {
+	reqId := req.GetId()
+	if reqId == "" {
 		log.Error("id is required", sl.Err(fmt.Errorf("%s: %s", op, "id is required")))
 		return nil, status.Error(codes.InvalidArgument, "id is required")
 	}
 
-	id, err := uuid.Parse(req_id)
+	id, err := uuid.Parse(reqId)
 	if err != nil {
 		log.Error("wrong id, must be uuid", sl.Err(fmt.Errorf("%s: %s", op, "wrong id, must be uuid")))
 		return nil, status.Error(codes.Internal, "wrong id, must be uuid")
 	}
 
-	user, err := s.userservice.DeleteUser(ctx, id)
+	user, err := s.userService.DeleteUser(ctx, id)
 	if err != nil {
-		if errors.Is(err, service_error.ErrNotFound) {
+		if errors.Is(err, serviceerror.ErrNotFound) {
 			log.Warn("user doesn't exists", sl.Err(err))
 			return nil, status.Error(codes.NotFound, "user doesn't exists")
 		}
