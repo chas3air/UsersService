@@ -3,7 +3,7 @@ package userstorage
 import (
 	"api/internal/domain/models"
 	"api/internal/domain/profiles"
-	storage_error "api/internal/storage"
+	storageerror "api/internal/storage"
 	"api/pkg/logger/sl"
 	umv1 "api/proto/gen"
 	"context"
@@ -62,12 +62,12 @@ func (g *GRPCUserServer) GetUsers(ctx context.Context) ([]models.User, error) {
 		return nil, g.handleError(err, op)
 	}
 
-	var res_users = make([]models.User, 0, 5)
+	var resUsers = make([]models.User, 0, 5)
 	for _, user := range res.GetUsers() {
-		res_users = append(res_users, profiles.ProtoUserToUser(user))
+		resUsers = append(resUsers, profiles.ProtoUserToUser(user))
 	}
 
-	return res_users, nil
+	return resUsers, nil
 }
 
 // GetUserById implements storage.IUserStorage.
@@ -216,10 +216,10 @@ func (g *GRPCUserServer) handleError(err error, operation string) error {
 		switch st.Code() {
 		case codes.NotFound:
 			g.log.Warn("users not found", sl.Err(err))
-			return fmt.Errorf("%s: %w", operation, storage_error.ErrNotFound)
+			return fmt.Errorf("%s: %w", operation, storageerror.ErrNotFound)
 		case codes.AlreadyExists:
 			g.log.Warn("users already exists", sl.Err(err))
-			return fmt.Errorf("%s: %w", operation, storage_error.ErrAlreadyExists)
+			return fmt.Errorf("%s: %w", operation, storageerror.ErrAlreadyExists)
 		default:
 			g.log.Error("gRPC error occurred", sl.Err(err))
 			return fmt.Errorf("%s: %w", operation, err)

@@ -3,7 +3,7 @@ package userhandler
 import (
 	"api/internal/domain/interfaces/service"
 	"api/internal/domain/models"
-	service_error "api/internal/service"
+	serviceerror "api/internal/service"
 	"api/pkg/logger/sl"
 	"encoding/json"
 	"errors"
@@ -35,7 +35,7 @@ func (u *UserHandler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	users, err := u.service.GetUsers(r.Context())
 	if err != nil {
-		if errors.Is(err, service_error.ErrNotFound) {
+		if errors.Is(err, serviceerror.ErrNotFound) {
 			log.Warn("users not found", sl.Err(err))
 			WriteUsersToBody(w, http.StatusNotFound, []models.User{})
 			return
@@ -62,16 +62,16 @@ func (u *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	uuid_id, err := uuid.Parse(id)
+	uuidId, err := uuid.Parse(id)
 	if err != nil {
 		log.Error("id must be uuid", sl.Err(err))
 		http.Error(w, "id must be uuid", http.StatusBadRequest)
 		return
 	}
 
-	user, err := u.service.GetUserById(r.Context(), uuid_id)
+	user, err := u.service.GetUserById(r.Context(), uuidId)
 	if err != nil {
-		if errors.Is(err, service_error.ErrNotFound) {
+		if errors.Is(err, serviceerror.ErrNotFound) {
 			log.Warn("user not found", sl.Err(err))
 			http.Error(w, "user not found", http.StatusNotFound)
 			return
@@ -100,7 +100,7 @@ func (u *UserHandler) InsertUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	user, err := u.service.InsertUser(r.Context(), user)
 	if err != nil {
-		if errors.Is(err, service_error.ErrAlreadyExists) {
+		if errors.Is(err, serviceerror.ErrAlreadyExists) {
 			log.Warn("user already exists", sl.Err(err))
 			http.Error(w, "user already exists", http.StatusConflict)
 			return
@@ -127,7 +127,7 @@ func (u *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	uuid_id, err := uuid.Parse(id)
+	uuidId, err := uuid.Parse(id)
 	if err != nil {
 		log.Error("id must be uuid", sl.Err(err))
 		http.Error(w, "id must be uuid", http.StatusBadRequest)
@@ -141,9 +141,9 @@ func (u *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	user, err = u.service.UpdateUser(r.Context(), uuid_id, user)
+	user, err = u.service.UpdateUser(r.Context(), uuidId, user)
 	if err != nil {
-		if errors.Is(err, service_error.ErrNotFound) {
+		if errors.Is(err, serviceerror.ErrNotFound) {
 			log.Warn("user not found", sl.Err(err))
 			http.Error(w, "user not found", http.StatusNotFound)
 			return
@@ -170,16 +170,16 @@ func (u *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	uuid_id, err := uuid.Parse(id)
+	uuidId, err := uuid.Parse(id)
 	if err != nil {
 		log.Error("id must be uuid", sl.Err(err))
 		http.Error(w, "id must be uuid", http.StatusBadRequest)
 		return
 	}
 
-	user, err := u.service.DeleteUser(r.Context(), uuid_id)
+	user, err := u.service.DeleteUser(r.Context(), uuidId)
 	if err != nil {
-		if errors.Is(err, service_error.ErrNotFound) {
+		if errors.Is(err, serviceerror.ErrNotFound) {
 			log.Warn("user not found", sl.Err(err))
 			http.Error(w, "user not found", http.StatusNotFound)
 			return

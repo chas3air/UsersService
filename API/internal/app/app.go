@@ -25,20 +25,20 @@ func New(log *slog.Logger, config *config.Config) *App {
 }
 
 func (a *App) Run() {
-	user_storage := userstorage.New(a.log, a.config.ServerHost, a.config.ServerPort)
-	user_service := userservice.New(a.log, user_storage)
-	user_handler := userhandler.New(a.log, user_service)
+	userStorage := userstorage.New(a.log, a.config.ServerHost, a.config.ServerPort)
+	userService := userservice.New(a.log, userStorage)
+	userHandler := userhandler.New(a.log, userService)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/v1/health-check", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	r.HandleFunc("/api/v1/users", user_handler.GetUsersHandler).Methods(http.MethodGet)
-	r.HandleFunc("/api/v1/users/{id}", user_handler.GetUserByIdHandler).Methods(http.MethodGet)
-	r.HandleFunc("/api/v1/users", user_handler.InsertUserHandler).Methods(http.MethodPost)
-	r.HandleFunc("/api/v1/users/{id}", user_handler.UpdateUserHandler).Methods(http.MethodPut)
-	r.HandleFunc("/api/v1/users/{id}", user_handler.DeleteUserHandler).Methods(http.MethodDelete)
+	r.HandleFunc("/api/v1/users", userHandler.GetUsersHandler).Methods(http.MethodGet)
+	r.HandleFunc("/api/v1/users/{id}", userHandler.GetUserByIdHandler).Methods(http.MethodGet)
+	r.HandleFunc("/api/v1/users", userHandler.InsertUserHandler).Methods(http.MethodPost)
+	r.HandleFunc("/api/v1/users/{id}", userHandler.UpdateUserHandler).Methods(http.MethodPut)
+	r.HandleFunc("/api/v1/users/{id}", userHandler.DeleteUserHandler).Methods(http.MethodDelete)
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", a.config.Api.Port), r); err != nil {
 		panic(err)
